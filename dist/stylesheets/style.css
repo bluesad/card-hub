@@ -1,0 +1,30 @@
+@use "@material/theme" with (
+  // $primary: #9c27b0,
+  // $secondary: #76ff03,
+  // $background: #fff,
+
+  $primary: #fcb8ab,
+  $secondary: #feeae6,
+  $on-primary: #442b2d,
+  $on-secondary: #442b2d,
+);
+@use "material-components-web";
+@use '@material/button/mdc-button';
+@use '@material/button';
+@use "@material/icon-button";
+@use "@material/top-app-bar/mdc-top-app-bar";
+body {
+  margin: 0;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; }
+
+a {
+  color: #00B7FF; }
+
+video {
+  transform: scale(-1, 1); }
+
+canvas,
+img {
+  transform: rotateY(180deg); }
+
+/*# sourceMappingURL=style.css.map */
