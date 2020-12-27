@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "prestart": "rimraf public/stylesheets/*.css*",
-    "build": "cp -R public/* dist && cp -R views/* dist",
+    "build": "cp -rf public/* dist && cp -rf views/* dist",
     "deploy": "gh-pages -d dist",
     "predeploy": "npm run build",
     "dev": "webpack-dev-server"
