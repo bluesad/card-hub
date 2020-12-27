@@ -1,42 +1,27 @@
-function loadImageToCanvas(url, cavansId) {
-  let canvas = document.getElementById(cavansId);
-  let ctx = canvas.getContext("2d");
-  let img = new Image();
-  img.crossOrigin = "anonymous";
-  img.onload = function () {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0, img.width, img.height);
-  };
-  img.src = url;
-}
-let inputSourceElement = document.getElementById("sourceInput");
-const canvasInputId = "canvasInput";
-inputSourceElement.addEventListener(
-  "change",
-  (e) => {
-    let files = e.target.files;
-    if (files.length > 0) {
-      let imgUrl = URL.createObjectURL(files[0]);
-      loadImageToCanvas(imgUrl, canvasInputId);
+function Cov() {
+    let src = cv.imread('canvas');
+    let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    let poly = new cv.MatVector();
+    cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+    // approximates each contour to polygon
+    for (let i = 0; i < contours.size(); ++i) {
+        let tmp = new cv.Mat();
+        let cnt = contours.get(i);
+        // You can try more different parameters
+        cv.approxPolyDP(cnt, tmp, 3, true);
+        poly.push_back(tmp);
+        cnt.delete(); tmp.delete();
     }
-  },
-  false
-);
-
-const btnEle = document.getElementById("start-extract-button");
-btnEle.onclick = function () {
-  this.disabled = true;
-  try {
-    let sourceMat = cv.imread("canvasInput");
-    itemExtract(sourceMat, "canvasOutput");
-  } catch (error) {
-    console.error(error);
-  }
-  this.disabled = false;
-};
-
-document.getElementById("download-button").onclick = function () {
-  this.href = document.getElementById("canvasOutput").toDataURL("image/png");
-  this.download = "result.png";
-};
+    // draw contours with random Scalar
+    for (let i = 0; i < contours.size(); ++i) {
+        let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
+            Math.round(Math.random() * 255));
+        cv.drawContours(dst, poly, i, color, 1, 8, hierarchy, 0);
+    }
+    cv.imshow('canvasOutput', dst);
+    src.delete(); dst.delete(); hierarchy.delete(); contours.delete(); poly.delete();
+}

@@ -27,7 +27,7 @@ const constraints = {
   },
 };
 const mediaStream = new MediaStream();
-const canvas = document.querySelector("canvas");
+const canvas = document.querySelector("#canvas");
 const context = canvas.getContext("2d");
 const photo = document.querySelector("#photo");
 const button = document.querySelector("button.foo-button");
@@ -36,10 +36,19 @@ const cameraOptions = document.querySelector(".custom-select");
 
 let streaming = false;
 let streamOn = null;
+let animeReq = null;
 
 async function getDevices() {
   const devices = await navigator.mediaDevices.enumerateDevices();
   return devices;
+}
+
+function step(timestamp) {
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  Cov && Cov();
+  
+  animeReq = window.requestAnimationFrame(step);
 }
 
 function startCamera(constraints) {
@@ -54,9 +63,7 @@ function startCamera(constraints) {
       }
       video.play();
 
-      setInterval(function () {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      }, 100);
+      requestAnimationFrame(step);
 
       return stream; // so chained promises can benefit
     })
@@ -70,6 +77,9 @@ function clearphoto() {
   // context.fillStyle = "#AAA";
   // context.fillRect(0, 0, canvas.width, canvas.height);
 	context.clearRect(0, 0, canvas.width, canvas.height);
+
+  const ctx = document.querySelector('#canvasOutput').getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const data = canvas.toDataURL("image/webp");
   photo.setAttribute("src", data);
@@ -98,7 +108,7 @@ function takepicture() {
 
     const file  = dataURLtoBlob(data);
     handleFiles(file);
-    Cov && Cov();
+    // Cov && Cov();
   } else {
     clearphoto();
   }
@@ -158,6 +168,7 @@ const getCameraSelection = async () => {
   const devices = await getDevices();
   const videoDevices = devices.filter((device) => device.kind === "videoinput");
   const options = videoDevices.map((videoDevice) => {
+    if(videoDevice.label === '') return '';
     return `<option value="${videoDevice.deviceId}">${videoDevice.label}</option>`;
   });
   return options;
@@ -166,7 +177,11 @@ const getCameraSelection = async () => {
 const getCameraList = () => {
   getCameraSelection()
     .then((data) => {
-      cameraOptions.innerHTML = data.join("");
+      if(data.join('')==='') {
+        cameraOptions.style.display = 'none';
+      }else{
+        cameraOptions.innerHTML = data.join("");
+      }
     })
     .catch((error) => console.error(error));
 };
@@ -177,6 +192,7 @@ const pauseStream = () => {
     track.stop();
   });
 	clearphoto();
+  animeReq && window.cancelAnimationFrame(animeReq);
 	video.srcObject = null;
   streamOn = null;
 };

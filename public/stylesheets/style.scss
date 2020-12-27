@@ -25,11 +25,15 @@ a{
   color: #00B7FF;
 }
 
-video{
-  transform: scale(-1,1);
+#canvas {
+  display: none;
 }
 
-canvas,
-img{
-  transform: rotateY(180deg);
-}
+// video{
+//   transform: scale(-1,1);
+// }
+
+// canvas,
+// img{
+//   transform: rotateY(180deg);
+// }
