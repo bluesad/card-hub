@@ -6,7 +6,6 @@ function Cov() {
     cv.Canny(src, edge, 50, 100, 3, false);
 
     let dst = cv.Mat.zeros(edge.rows, edge.cols, cv.CV_8UC3);
-    cv.cvtColor(edge, edge, cv.COLOR_RGBA2GRAY, 0);
     cv.threshold(edge, edge, 100, 200, cv.THRESH_BINARY);
     let contours = new cv.MatVector();
     let hierarchy = new cv.Mat();
