@@ -98,6 +98,7 @@ function takepicture() {
 
     const file  = dataURLtoBlob(data);
     handleFiles(file);
+    Cov && Cov();
   } else {
     clearphoto();
   }
