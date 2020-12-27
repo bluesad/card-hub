@@ -2,7 +2,7 @@ function Cov() {
     let src = cv.imread('canvas');
     cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
     // You can try more different parameters
-    cv.Canny(src, dst, 50, 100, 3, false);
+    cv.Canny(src, src, 50, 100, 3, false);
 
     let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
     cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
