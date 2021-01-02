@@ -1,4 +1,5 @@
 function Cov() {
+    console.time('opencv processing');
     let src = cv.imread('canvas');
     let gray_src = new cv.Mat();
     cv.cvtColor(src, gray_src, cv.COLOR_RGB2GRAY, 0);
@@ -36,8 +37,8 @@ function Cov() {
             }
             cv.approxPolyDP(cnt, tmp, perimeter, true);
             poly.push_back(tmp);
-            cnt.delete(); tmp.delete();
         }
+        cnt.delete(); tmp.delete();
     }
     if (maxContourIndex >= 0) {
         let rotatedRect = cv.minAreaRect(contours.get(maxContourIndex));
@@ -52,6 +53,7 @@ function Cov() {
     //    cv.drawContours(dst, poly, i, color, 1, 8, hierarchy, 0);
         cv.imshow('canvasOutput', src);
     }
-    src.delete(); edge.delete(); dst.delete(); hierarchy.delete(); contours.delete(); poly.delete();
+    src.delete(); gray_src.delete(); raw_edge.delete(); edge.delete(); M.delete(); dst.delete(); hierarchy.delete(); contours.delete(); poly.delete();
+    console.timeEnd('opencv processing');
 }
 
