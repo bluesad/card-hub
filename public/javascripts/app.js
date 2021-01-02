@@ -77,8 +77,6 @@ const startApp = () => {
         video.play();
         document.querySelector('#demo-absolute-fab').disabled = false;
 
-        window.requestAnimationFrame(step);
-
         return rawStream; // so chained promises can benefit
       })
       .catch((error) => {
@@ -224,6 +222,8 @@ const startApp = () => {
       })
       .then((photoSettings) => {
         input.value = photoSettings.imageWidth;
+
+        animeReq = window.requestAnimationFrame(step);
       })
       .catch((error) => console.error("Argh!", error.name || error));
   };
@@ -292,6 +292,18 @@ const startApp = () => {
     // startCamera(updatedConstraints);
   });
 
+  input.oninput = async (event) => {
+    if(stream) {      
+      try {
+        const constraints = { advanced: [{ 'zoom': input.value }] };
+        const [track] = stream.getVideoTracks();
+        await track.applyConstraints(constraints);
+      } catch (err) {
+        console.error("applyConstraints() failed: ", err);
+      }
+    }
+  };
+
 
   ////////////////////////////////////////////////////////////////
 
@@ -307,10 +319,14 @@ const startApp = () => {
   function step(timestamp) {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    // onTakePhotoButtonClick();
-    // Cov && Cov();
-
+    Cov && Cov();
     animeReq = window.requestAnimationFrame(step);
+
+    // onTakePhotoButtonClick().then((data) => {
+    //   window.requestAnimationFrame(step);
+    //   Cov && Cov();
+    // });
+
   }
 
   function takepicture() {
@@ -364,11 +380,12 @@ const startApp = () => {
 
   function onTakePhotoButtonClick() {
     if (video.videoWidth && video.videoHeight && imageCapture) {
-      imageCapture
+      return imageCapture
         .takePhoto({ imageWidth: input.max })
         .then((blob) => createImageBitmap(blob))
         .then((imageBitmap) => {
-          drawCanvas(imageBitmap);
+          let c = document.querySelector('#canvasOutput');
+          drawCanvas(imageBitmap, c);
           console.log(
             `Photo size is ${imageBitmap.width}x${imageBitmap.height}`
           );
@@ -380,18 +397,21 @@ const startApp = () => {
         //   handleFiles(file);
         // })
         .catch((error) => console.error(error));
+    } else {
+      return Promise.resolve();
     }
   }
 
-  function drawCanvas(img) {
-    let c = document.querySelector('#canvasOutput');
+  function drawCanvas(img, c) {
+    // let c = document.querySelector('#canvasOutput');
     let ctx = c.getContext('2d');
-    c.width = getComputedStyle(c).width.split("px")[0];
-    c.height = getComputedStyle(c).height.split("px")[0];
+    c.width = getComputedStyle(canvas).width.split("px")[0];
+    c.height = getComputedStyle(canvas).height.split("px")[0];
     let ratio = Math.min(c.width / img.width, c.height / img.height);
     let x = (c.width - img.width * ratio) / 2;
     let y = (c.height - img.height * ratio) / 2;
     ctx.clearRect(0, 0, c.width, c.height);
+    // ctx.drawImage(img, 0, 0, c.width, c.height);
     ctx.drawImage(
       img,
       0,
