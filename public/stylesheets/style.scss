@@ -24,9 +24,12 @@ body{
 a{
   color: #00B7FF;
 }
-
-#canvas {
-  display: none;
+video {
+  max-width: 100vw;
+}
+canvas,
+video{
+  display: flex;
 }
 
 // video{
@@ -37,3 +40,32 @@ a{
 // img{
 //   transform: rotateY(180deg);
 // }
+
+// #canvas{
+//   display: none;
+// }
+#photo,
+#webcam{
+  display: none;
+}
+
+#demo-absolute-fab,
+#demo-absolute-fab2,
+.video-options{
+  position: fixed;
+  
+}
+#demo-absolute-fab,
+.video-options{
+  right: 30px;
+}
+#demo-absolute-fab{
+  bottom: 30px;
+}
+.video-options{
+  left: 30px;
+}
+#demo-absolute-fab2{
+  bottom: 100px;
+  right: 30px;
+}
