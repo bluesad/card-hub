@@ -35,7 +35,8 @@ video {
   max-width: 25vw; }
 
 #canvasOutput {
-  max-width: 100vw; }
+  max-width: 100vw;
+  padding-top: 56px; }
 
 #photo,
 #webcam {

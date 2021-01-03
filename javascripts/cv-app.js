@@ -50,8 +50,16 @@ function Cov() {
         for (let i = 0; i < 4; i++) {
             cv.line(src, vertices[i], vertices[(i + 1) % 4], rectangleColor, 2, cv.LINE_AA, 0);
         }
+
+        try{
+            let rect = new cv.Rect(rotatedRect.center.x/2, rotatedRect.center.y/2, rotatedRect.size.width, rotatedRect.size.height);
+            src = src.roi(rect);
+            cv.imshow('canvasOutput', src);
+        }catch(e){
+            console.error(e, rotatedRect.center.x/2, rotatedRect.center.y/2, rotatedRect.size.width, rotatedRect.size.height);
+        }
+
     //    cv.drawContours(dst, poly, i, color, 1, 8, hierarchy, 0);
-        cv.imshow('canvasOutput', src);
     }
     src.delete(); gray_src.delete(); raw_edge.delete(); edge.delete(); M.delete(); dst.delete(); hierarchy.delete(); contours.delete(); poly.delete();
     console.timeEnd('opencv processing');
