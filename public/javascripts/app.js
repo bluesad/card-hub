@@ -30,12 +30,12 @@ const startApp = () => {
       // ],
       width: {
         min: 640,
-        ideal: 3840, // 1920,
+        ideal: 1920, // ,3840
         max: 7680,
       },
       height: {
         min: 320,
-        ideal: 2160, // 1080,
+        ideal: 1080, // ,2160
         max: 4320
       },
       // facingMode: 'user'
@@ -58,6 +58,7 @@ const startApp = () => {
   let animeReq = null;
   let stream;
   let imageCapture;
+  let vc = null;
 
   async function getDevices() {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -131,8 +132,8 @@ const startApp = () => {
       if (videoDevice.label === "") return "";
       return `<option value="${videoDevice.deviceId}">${videoDevice.label}</option>`;
     });
-    options.unshift(`<option value="user">前置</option>`);
-    options.unshift(`<option value="environment">后置</option>`);
+    options.unshift(`<option value="user">Front Camera</option>`);
+    options.unshift(`<option value="environment">Rear Camera</option>`);
     return options;
   };
 
@@ -239,6 +240,11 @@ const startApp = () => {
       canvas.setAttribute("height", video.videoHeight);
       document.querySelector('#canvasOutput').setAttribute("width", video.videoWidth);
       document.querySelector('#canvasOutput').setAttribute("height", video.videoHeight);
+      try{
+        vc = new cv.VideoCapture(video);
+      }catch(e){
+        console.error(e);
+      }
     },
     false
   );
