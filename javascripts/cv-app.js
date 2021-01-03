@@ -11,7 +11,8 @@ function Cov() {
 
         // You can try more different parameters
         cv.Canny(gray_src, raw_edge, 100, 200);
-        let kernel_size = Math.ceil(Math.min(raw_edge.cols, raw_edge.rows)/144);
+        // let kernel_size = Math.ceil(Math.min(raw_edge.cols, raw_edge.rows)/144);
+        let kernel_size = 5;
         let M = cv.Mat.ones(kernel_size, kernel_size, cv.CV_8U);
         // You can try more different parameters
         cv.morphologyEx(raw_edge, edge, cv.MORPH_CLOSE, M);
