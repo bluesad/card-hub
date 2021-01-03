@@ -1,41 +1,22 @@
 /**
- *  Here we will check from time to time if we can access the OpenCV
- *  functions. We will return in a callback if it's been resolved
- *  well (true) or if there has been a timeout (false).
- */
-function waitForOpencv(callbackFn, waitTimeMs = 1000 * 60 * 20, stepTimeMs = 100) {
-  if (cv.Mat) callbackFn(true)
-
-  let timeSpentMs = 0
-  const interval = setInterval(() => {
-    const limitReached = timeSpentMs > waitTimeMs
-    if (cv.Mat || limitReached) {
-      clearInterval(interval)
-      return callbackFn(!limitReached)
-    } else {
-      timeSpentMs += stepTimeMs
-    }
-  }, stepTimeMs)
-}
-
-/**
- * With OpenCV we have to work with the images as cv.Mat (matrices),
- * so you'll have to transform the ImageData to it.
+ * With OpenCV we have to work the images as cv.Mat (matrices),
+ * so the first thing we have to do is to transform the
+ * ImageData to a type that openCV can recognize.
  */
 function imageProcessing({ msg, payload }) {
   const img = cv.matFromImageData(payload)
   let result = new cv.Mat()
 
-  // This converts the image to a greyscale.
+  // What this does is convert the image to a grey scale.
   cv.cvtColor(img, result, cv.COLOR_BGR2GRAY)
   postMessage({ msg, payload: imageDataFromMat(result) })
 }
 
 /**
- * This function converts again from cv.Mat to ImageData
+ * This function is to convert again from cv.Mat to ImageData
  */
 function imageDataFromMat(mat) {
-  // converts the mat type to cv.CV_8U
+  // convert the mat type to cv.CV_8U
   const img = new cv.Mat()
   const depth = mat.type() % 8
   const scale =
@@ -43,7 +24,7 @@ function imageDataFromMat(mat) {
   const shift = depth === cv.CV_8S || depth === cv.CV_16S ? 128.0 : 0.0
   mat.convertTo(img, cv.CV_8U, scale, shift)
 
-  // converts the img type to cv.CV_8UC4
+  // convert the img type to cv.CV_8UC4
   switch (img.type()) {
     case cv.CV_8UC1:
       cv.cvtColor(img, img, cv.COLOR_GRAY2RGBA)
@@ -68,24 +49,44 @@ function imageDataFromMat(mat) {
 }
 
 /**
+ *  Here we will check from time to time if we can access the OpenCV
+ *  functions. We will return in a callback if it has been resolved
+ *  well (true) or if there has been a timeout (false).
+ */
+function waitForOpencv(callbackFn, waitTimeMs = 1000 * 30, stepTimeMs = 100) {
+  if (cv.Mat) callbackFn(true)
+
+  let timeSpentMs = 0
+  const interval = setInterval(() => {
+    const limitReached = timeSpentMs > waitTimeMs
+    if (cv.Mat || limitReached) {
+      clearInterval(interval)
+      return callbackFn(!limitReached)
+    } else {
+      timeSpentMs += stepTimeMs
+    }
+  }, stepTimeMs)
+}
+
+/**
  * This exists to capture all the events that are thrown out of the worker
  * into the worker. Without this, there would be no communication possible
- * with the project.
+ * with our project.
  */
 onmessage = function (e) {
   switch (e.data.msg) {
     case 'load': {
       // Import Webassembly script
-      self.importScripts('./opencv.js');
+      self.importScripts('./opencv_3_4_custom_O3.js')
       waitForOpencv(function (success) {
-        if (success) postMessage({ msg: e.data.msg });
-        else throw new Error('Error on loading OpenCV');
+        if (success) postMessage({ msg: e.data.msg })
+        else throw new Error('Error on loading OpenCV')
       })
-      break;
+      break
     }
-		case 'imageProcessing':
-      return imageProcessing(e.data);
+    case 'imageProcessing':
+      return imageProcessing(e.data)
     default:
-      break;
+      break
   }
 }

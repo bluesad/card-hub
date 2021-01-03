@@ -405,8 +405,8 @@ const startApp = () => {
   function drawCanvas(img, c) {
     // let c = document.querySelector('#canvasOutput');
     let ctx = c.getContext('2d');
-    c.width = getComputedStyle(canvas).width.split("px")[0];
-    c.height = getComputedStyle(canvas).height.split("px")[0];
+    c.width = getComputedStyle(c).width.split("px")[0];
+    c.height = getComputedStyle(c).height.split("px")[0];
     let ratio = Math.min(c.width / img.width, c.height / img.height);
     let x = (c.width - img.width * ratio) / 2;
     let y = (c.height - img.height * ratio) / 2;
