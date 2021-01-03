@@ -206,6 +206,8 @@ const startApp = () => {
         startButton.querySelector(".material-icons").textContent =
           "videocam_off";
 
+        animeReq = window.requestAnimationFrame(step);
+
         const track = rawStream.getVideoTracks()[0];
         imageCapture = new ImageCapture(track);
 
@@ -222,8 +224,6 @@ const startApp = () => {
       })
       .then((photoSettings) => {
         input.value = photoSettings.imageWidth;
-
-        animeReq = window.requestAnimationFrame(step);
       })
       .catch((error) => console.error("Argh!", error.name || error));
   };
