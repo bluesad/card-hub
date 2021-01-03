@@ -28,7 +28,11 @@ video {
   display: flex; }
 
 #canvas {
-  max-width: 100vw; }
+  position: fixed;
+  top: 58px;
+  left: 3px;
+  z-index: 1;
+  max-width: 25vw; }
 
 #canvasOutput {
   max-width: 100vw; }
