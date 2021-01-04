@@ -324,6 +324,7 @@ const startApp = () => {
 
   function step(timestamp) {
     context.clearRect(0, 0, canvas.width, canvas.height);
+    // document.querySelector('#canvasOutput').getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     Cov && Cov();
     animeReq = window.requestAnimationFrame(step);
