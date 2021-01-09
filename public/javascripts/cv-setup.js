@@ -86,8 +86,17 @@ function startCamera() {
         height = video.videoHeight / (video.videoWidth / width);
         video.setAttribute("width", width);
         video.setAttribute("height", height);
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
+        document.querySelector('#canvasOutput').setAttribute("width", width);
+        document.querySelector('#canvasOutput').setAttribute("height", height);
+
         streaming = true;
-        vc = new cv.VideoCapture(video);
+        try{
+          vc = new cv.VideoCapture(video);
+        }catch(e){
+          console.error(e);
+        }
       }
       startVideoProcessing();
     },
@@ -210,7 +219,7 @@ function findContours(src) {
     return src;
 }
 
-function processVideo() {
+async function processVideo() {
 	if(!streaming) return;
   vc.read(src);
   let result;
@@ -233,6 +242,15 @@ function processVideo() {
     case "equalizeHist":
       result = equalizeHist(src);
       break;
+    case 'processImage': 
+      const canvasOutput = document.querySelector('#canvasOutput');
+      const ctx = canvasOutput.getContext('2d');
+      context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+      const image = context.getImageData(0, 0, video.videoWidth, video.videoHeight);
+      result = await cvService.imageProcessing(image);
+      ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
+      animeReq = requestAnimationFrame(processVideo);
+      return;
 		case 'findContours': result = findContours(src);
 			break;
     default:
@@ -257,6 +275,7 @@ function stopCamera() {
     .getElementById("canvasOutput")
     .getContext("2d")
     .clearRect(0, 0, width, height);
+  context.clearRect(0, 0, width, height);
   video.pause();
   video.srcObject = null;
   stream.getVideoTracks()[0].stop();

@@ -10,6 +10,7 @@ function imageProcessing({ msg, payload }) {
   // What this does is convert the image to a grey scale.
   cv.cvtColor(img, result, cv.COLOR_BGR2GRAY)
   postMessage({ msg, payload: imageDataFromMat(result) })
+  // postMessage({ msg, payload: result })
 }
 
 /**
@@ -78,7 +79,7 @@ onmessage = function (e) {
     case 'load': {
       // Import Webassembly script
       self.importScripts('./opencv_3_4_custom_O3.js')
-      waitForOpencv(function (success) {
+      waitForOpencv((success) => {
         if (success) postMessage({ msg: e.data.msg })
         else throw new Error('Error on loading OpenCV')
       })
