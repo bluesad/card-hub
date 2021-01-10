@@ -50,6 +50,8 @@ const startButton = document.querySelector("button.foo-button");
 const cameraButton = document.querySelector(".camera-button");
 const cameraOptions = document.querySelector(".custom-select");
 const input = document.querySelector('input[type="range"]');
+const canvasOutput = document.querySelector('#canvasOutput');
+const ctx = canvasOutput.getContext('2d');
 
 // let streaming = false;
 // let streamOn = null;
@@ -126,137 +128,64 @@ function passThrough(src) {
   return src;
 }
 
-function gray(src) {
-  cv.cvtColor(src, dstC1, cv.COLOR_RGBA2GRAY);
-  return dstC1;
-}
 
-function hsv(src) {
-  cv.cvtColor(src, dstC3, cv.COLOR_RGBA2RGB);
-  cv.cvtColor(dstC3, dstC3, cv.COLOR_RGB2HSV);
-  return dstC3;
-}
+// let contoursColor = [];
+// for (let i = 0; i < 10000; i++) {
+//   contoursColor.push([
+//     Math.round(Math.random() * 255),
+//     Math.round(Math.random() * 255),
+//     Math.round(Math.random() * 255),
+//     0,
+//   ]);
+// }
 
-function scharr(src) {
-  var mat = new cv.Mat(height, width, cv.CV_8UC1);
-  cv.cvtColor(src, mat, cv.COLOR_RGB2GRAY, 0);
-  cv.Scharr(mat, dstC1, cv.CV_8U, 1, 0, 1, 0, cv.BORDER_DEFAULT);
-  mat.delete();
-  return dstC1;
-}
 
-let contoursColor = [];
-for (let i = 0; i < 10000; i++) {
-  contoursColor.push([
-    Math.round(Math.random() * 255),
-    Math.round(Math.random() * 255),
-    Math.round(Math.random() * 255),
-    0,
-  ]);
-}
-
-function calcHist(src) {
-  cv.cvtColor(src, dstC1, cv.COLOR_RGBA2GRAY);
-  let srcVec = new cv.MatVector();
-  srcVec.push_back(dstC1);
-  let scale = 2;
-  let channels = [0],
-    histSize = [src.cols / scale],
-    ranges = [0, 255];
-  let hist = new cv.Mat(),
-    mask = new cv.Mat(),
-    color = new cv.Scalar(0xfb, 0xca, 0x04, 0xff);
-  cv.calcHist(srcVec, channels, mask, hist, histSize, ranges);
-  let result = cv.minMaxLoc(hist, mask);
-  var max = result.maxVal;
-  cv.cvtColor(dstC1, dstC4, cv.COLOR_GRAY2RGBA);
-  // draw histogram on src
-  for (var i = 0; i < histSize[0]; i++) {
-    var binVal = (hist.data32F[i] * src.rows) / max;
-    cv.rectangle(
-      dstC4,
-      { x: i * scale, y: src.rows - 1 },
-      { x: (i + 1) * scale - 1, y: src.rows - binVal / 3 },
-      color,
-      cv.FILLED
-    );
-  }
-  srcVec.delete();
-  mask.delete();
-  hist.delete();
-  return dstC4;
-}
-
-function equalizeHist(src) {
-  cv.cvtColor(src, dstC1, cv.COLOR_RGBA2GRAY, 0);
-  cv.equalizeHist(dstC1, dstC1);
-  return dstC1;
-}
-
-function findContours(src) {
-    // cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
-    // cv.threshold(src, src, 100, 200, cv.THRESH_BINARY);
-    // let contours = new cv.MatVector();
-    // let hierarchy = new cv.Mat();
-    // let poly = new cv.MatVector();
-    // cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
-    // // approximates each contour to polygon
-    // for (let i = 0; i < contours.size(); ++i) {
-    //     let tmp = new cv.Mat();
-    //     let cnt = contours.get(i);
-    //     // You can try more different parameters
-    //     cv.approxPolyDP(cnt, tmp, 3, true);
-    //     poly.push_back(tmp);
-    //     cnt.delete(); tmp.delete();
-    // }
-    // // draw contours with random Scalar
-    // for (let i = 0; i < contours.size(); ++i) {
-    //     let color = new cv.Scalar(Math.round(Math.random() * 255), Math.round(Math.random() * 255),
-    //         Math.round(Math.random() * 255));
-    //     cv.drawContours(dstC3, poly, i, color, 1, 8, hierarchy, 0);
-    // }
-		// contours.delete(); hierarchy.delete(); poly.delete();
-    return src;
-}
+// function findContours(imgData) {
+    
+//     return src;
+// }
 
 async function processVideo() {
 	if(!streaming) return;
   vc.read(src);
-  let result;
+  let result, image;
+
+  context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+  image = context.getImageData(0, 0, video.videoWidth, video.videoHeight);
+
   switch (filter) {
-    case "passThrough":
-      result = passThrough(src);
-      break;
     case "gray":
-      result = gray(src);
+      // result = gray(src);
+      result = await cvService.filter({payload: image, actionType: 'gray'});
       break;
     case "hsv":
-      result = hsv(src);
+      result = await cvService.filter({payload: image, actionType: 'hsv'});
       break;
     case "scharr":
-      result = scharr(src);
+      result = await cvService.filter({payload: image, actionType: 'scharr'});
       break;
     case "calcHist":
-      result = calcHist(src);
+      result = await cvService.filter({payload: image, actionType: 'calcHist'});
       break;
     case "equalizeHist":
-      result = equalizeHist(src);
+      result = await cvService.filter({payload: image, actionType: 'equalizeHist'});
       break;
     case 'processImage': 
-      const canvasOutput = document.querySelector('#canvasOutput');
-      const ctx = canvasOutput.getContext('2d');
-      context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-      const image = context.getImageData(0, 0, video.videoWidth, video.videoHeight);
       result = await cvService.imageProcessing(image);
-      ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
-      animeReq = requestAnimationFrame(processVideo);
-      return;
-		case 'findContours': result = findContours(src);
-			break;
+
+      break;
+		case 'findContours': 
+      result = await cvService.findContours(image);
+
+      break;
+    case "passThrough":
     default:
       result = passThrough(src);
+      cv.imshow("canvasOutput", result);
+      animeReq = requestAnimationFrame(processVideo);
+      return;
   }
-  cv.imshow("canvasOutput", result);
+  ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
   animeReq = requestAnimationFrame(processVideo);
 }
 
@@ -271,10 +200,7 @@ function stopCamera() {
   if (!streaming) return;
   animeReq && window.cancelAnimationFrame(animeReq);
   stopVideoProcessing();
-  document
-    .getElementById("canvasOutput")
-    .getContext("2d")
-    .clearRect(0, 0, width, height);
+  ctx.clearRect(0, 0, width, height);
   context.clearRect(0, 0, width, height);
   video.pause();
   video.srcObject = null;
