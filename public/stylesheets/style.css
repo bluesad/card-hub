@@ -28,18 +28,21 @@ video {
   display: flex; }
 
 #canvas {
-  position: fixed;
-  top: 58px;
+  display: none; }
+
+#webcam {
+  position: absolute;
+  top: 60px;
   right: 3px;
   z-index: 1;
-  max-width: 25vw; }
+  max-width: 25vw;
+  max-height: 25%; }
 
 #canvasOutput {
   max-width: 100vw;
   padding-top: 56px; }
 
-#photo,
-#webcam {
+#photo {
   display: none; }
 
 #demo-absolute-fab,

@@ -1,16 +1,17 @@
 import cvService from './javascripts/cv-service.mjs';
 
-function component() {
-  const element = document.createElement('div');
+// function component() {
+//   const element = document.createElement('div');
 
-  // Lodash, currently included via a script, is required for this line to work
-  element.innerHTML = ['Hello', 'webpack'].join(' ');
+//   // Lodash, currently included via a script, is required for this line to work
+//   element.innerHTML = ['Hello', 'webpack'].join(' ');
 
-  return element;
-}
+//   return element;
+// }
 
 const LoadOpenCV = async ()=> {
   await cvService.load();
+  window.cvService = cvService;
 }
 
 LoadOpenCV().then(() => {

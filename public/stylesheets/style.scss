@@ -45,11 +45,15 @@ video{
 //   display: none;
 // }
 #canvas{
-  position: fixed;
-  top: 58px;
+  display: none;
+}
+#webcam{
+  position: absolute;
+  top: 60px;
   right: 3px;
   z-index: 1;
   max-width: 25vw;
+  max-height: 25%;
   // // transform: scale(0.15);
   // // position: fixed;
   // // z-index: 1;
@@ -63,8 +67,7 @@ video{
 //   position: absolute;
 //   top: 56px;
 }
-#photo,
-#webcam{
+#photo{
   display: none;
 }
 
