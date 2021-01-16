@@ -144,6 +144,34 @@ function passThrough(src) {
     
 //     return src;
 // }
+function setFilters() {
+  const filters = [
+    { value: "gray", name: "灰度" },
+    { value: "hsv", name: "HSV" },
+    { value: "scharr", name: "Scharr" },
+    { value: "calcHist", name: "直方图📊" },
+    { value: "equalizeHist", name: "Equalize Histogram" },
+    { value: "findContours", name: "卡片识别" },
+    { value: "passThrough", name: "默认" },
+  ];
+  let d=document.createDocumentFragment();
+  filters.forEach(it => {
+    let opt = document.createElement('option');
+    opt.setAttribute('value', it.value);
+    if(it.value === 'passThrough') {
+      opt.setAttribute('selected', 'selected');
+    }
+    opt.innerText = it.name;
+
+    d.appendChild(opt);
+  });
+  let select = document.createElement('select');
+  select.appendChild(d);
+  select.addEventListener('change', (e) => {
+    filter = e.target.value;
+  });
+  document.querySelector('.filter-type').appendChild(select);
+}
 
 async function processVideo() {
 	if(!streaming) return;
@@ -255,3 +283,5 @@ const getCameraList = (cameraOptions) => {
 cameraOptions.addEventListener("change", () => {});
 
 getCameraList(cameraOptions);
+
+setFilters();
