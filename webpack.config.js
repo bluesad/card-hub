@@ -6,6 +6,7 @@ const {InjectManifest} = require('workbox-webpack-plugin');
 const WorkboxPlugin = require('workbox-webpack-plugin');
 // const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+require('dotenv').config()
 
 module.exports = {
   entry: "./public/index.js",
