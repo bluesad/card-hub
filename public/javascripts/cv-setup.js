@@ -323,7 +323,7 @@ cameraOptions.addEventListener("change", () => {
       delete constraints.video.facingMode;
       break;
   }
-  alert(JSON.stringify(constraints));
+  // alert(JSON.stringify(constraints));
   startCamera();
 });
 
