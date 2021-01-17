@@ -61,7 +61,7 @@ let imageCapture;
 let vc = null;
 
 // In this case, We set width 320, and the height will be computed based on the input stream.
-let width = 1280;
+let width = 1080;
 let height = 0;
 
 // whether streaming video from the camera.
@@ -212,9 +212,9 @@ async function processVideo() {
 		case 'findContours': 
       result = await cvService.findContours(image);
 
-      await (() => new Promise((resolve, reject) =>{
-        setTimeout(resolve, 5000);
-      }))();
+      // await (() => new Promise((resolve, reject) =>{
+      //   setTimeout(resolve, 5000);
+      // }))();
 
       break;
     case "passThrough":
@@ -323,6 +323,7 @@ cameraOptions.addEventListener("change", () => {
       delete constraints.video.facingMode;
       break;
   }
+  alert(JSON.stringify(constraints));
   startCamera();
 });
 
