@@ -12,7 +12,7 @@ if (!supports["facingMode"]) {
 const video = document.querySelector("#webcam");
 // const btnFront = document.querySelector("#btn-front");
 // const btnBack = document.querySelector("#btn-back");
-const constraints = {
+let constraints = {
   audio: false,
   video: {
     zoom: true,
@@ -28,13 +28,13 @@ const constraints = {
     // ],
     width: {
       min: 640,
-      ideal: 3840, // 1920,
-      max: 7680,
+      ideal: 1920, // 7680
+      max: 3840,
     },
     height: {
       min: 320,
-      ideal: 2160, // 1080,
-      max: 4320,
+      ideal: 1080, // 4320
+      max: 2160
     },
     // facingMode: 'user'
     frameRate: { ideal: 30, max: 120, min: 10 },
@@ -76,6 +76,13 @@ function startCamera() {
       video.srcObject = s;
       video.play();
       startButton.querySelector(".material-icons").textContent = "videocam_off";
+
+      let photoCapabilities = stream.getVideoTracks()[0].getCapabilities();
+      if(photoCapabilities.zoom) {
+        input.min = photoCapabilities.zoom.min; // photoCapabilities.width.min;
+        input.max = photoCapabilities.zoom.max; // photoCapabilities.width.max;
+        input.step = photoCapabilities.zoom.step; // photoCapabilities.imageWidth.step;
+      }
     })
     .catch(function(err) {
       console.log("An error occured! " + err);
@@ -205,6 +212,10 @@ async function processVideo() {
 		case 'findContours': 
       result = await cvService.findContours(image);
 
+      await (() => new Promise((resolve, reject) =>{
+        setTimeout(resolve, 5000);
+      }))();
+
       break;
     case "passThrough":
     default:
@@ -280,7 +291,52 @@ const getCameraList = (cameraOptions) => {
     .catch((error) => console.error(error));
 };
 
-cameraOptions.addEventListener("change", () => {});
+cameraOptions.addEventListener("change", () => {
+  stopCamera();
+  let facingMode = cameraOptions.value;
+  switch (facingMode) {
+    case "user":
+    case "environment":
+      constraints = {
+        ...constraints,
+        video: {
+          ...constraints.video,
+          facingMode: {
+            ...constraints.video.facingMode,
+            ideal: facingMode,
+          },
+        },
+      };
+      delete constraints.video.deviceId;
+      break;
+    default:
+      constraints = {
+        ...constraints,
+        video: {
+          ...constraints.video,
+          deviceId: {
+            ...constraints.video.deviceId,
+            ideal: facingMode,
+          },
+        },
+      };
+      delete constraints.video.facingMode;
+      break;
+  }
+  startCamera();
+});
+
+input.oninput = async (event) => {
+  if (stream) {
+    try {
+      const constraints = { advanced: [{ zoom: input.value }] };
+      const [track] = stream.getVideoTracks();
+      await track.applyConstraints(constraints);
+    } catch (err) {
+      console.error("applyConstraints() failed: ", err);
+    }
+  }
+};
 
 getCameraList(cameraOptions);
 
