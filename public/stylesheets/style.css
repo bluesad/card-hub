@@ -20,7 +20,54 @@ body {
 a {
   color: #00B7FF; }
 
+video {
+  max-width: 100vw; }
+
+canvas,
+video {
+  display: flex; }
+
 #canvas {
   display: none; }
+
+#webcam {
+  position: absolute;
+  top: 60px;
+  right: 3px;
+  z-index: 1;
+  max-width: 25vw;
+  max-height: 25%; }
+
+#canvasOutput {
+  max-width: 100vw;
+  padding-top: 56px; }
+
+#photo {
+  display: none; }
+
+#demo-absolute-fab,
+#demo-absolute-fab2,
+.video-options {
+  position: fixed; }
+
+#demo-absolute-fab {
+  right: 30px; }
+
+.video-options {
+  left: 10px; }
+
+#demo-absolute-fab,
+.video-options {
+  bottom: 30px; }
+
+#demo-absolute-fab2 {
+  bottom: 100px;
+  right: 30px; }
+
+.demo-card__secondary {
+  max-height: 10rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth; }
 
 /*# sourceMappingURL=style.css.map */

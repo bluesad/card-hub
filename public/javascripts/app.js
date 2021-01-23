@@ -1,153 +1,112 @@
 // this is not part of the polyfill
-if (
-  !("mediaDevices" in navigator) ||
-  !("getUserMedia" in navigator.mediaDevices)
-) {
-  throw new Error("getUserMedia() not supported.");
-}
+const startApp = () => {
+  if (
+    !("mediaDevices" in navigator) ||
+    !("getUserMedia" in navigator.mediaDevices)
+  ) {
+    throw new Error("getUserMedia() not supported.");
+  }
+  const supports = navigator.mediaDevices.getSupportedConstraints();
+  if (!supports["facingMode"]) {
+    throw new Error("Facing Mode Not supported!");
+  }
 
-const video = document.querySelector("video");
-const constraints = {
-  audio: false,
-  video: {
-    // width: {
-    //   min: 1280,
-    //   ideal: 1920,
-    //   max: 2560,
-    // },
-    // height: {
-    //   min: 720,
-    //   ideal: 1080,
-    //   max: 1440
-    // },
-    // facingMode: 'user'
-    facingMode: {
-      ideal: "environment",
+  const video = document.querySelector("#webcam");
+  // const btnFront = document.querySelector("#btn-front");
+  // const btnBack = document.querySelector("#btn-back");
+  const constraints = {
+    audio: false,
+    video: {
+      zoom: true,
+      // optional: [
+      //   { minWidth: 320 },
+      //   { minWidth: 640 },
+      //   { minWidth: 1024 },
+      //   { minWidth: 1280 },
+      //   { minWidth: 1920 },
+      //   { minWidth: 2560 },
+      //   { frameRate: 30 },
+      //   { facingMode: "environment" }
+      // ],
+      width: {
+        min: 640,
+        ideal: 1920, // ,3840
+        max: 7680,
+      },
+      height: {
+        min: 320,
+        ideal: 1080, // ,2160
+        max: 4320
+      },
+      // facingMode: 'user'
+      frameRate: { ideal: 30, max: 120, min: 10 },
+      facingMode: {
+        ideal: "environment",
+      },
     },
-  },
-};
-const mediaStream = new MediaStream();
-const canvas = document.querySelector("#canvas");
-const context = canvas.getContext("2d");
-const photo = document.querySelector("#photo");
-const button = document.querySelector("button.foo-button");
-const cameraButton = document.querySelector(".camera-button");
-const cameraOptions = document.querySelector(".custom-select");
-
-let streaming = false;
-let streamOn = null;
-let animeReq = null;
-
-async function getDevices() {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  return devices;
-}
-
-function step(timestamp) {
-
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  Cov && Cov();
-  
-  animeReq = window.requestAnimationFrame(step);
-}
-
-function startCamera(constraints) {
-  return navigator.mediaDevices
-    .getUserMedia(constraints)
-    .then((stream) => {
-      // video.src = URL.createObjectURL(stream);
-      try {
-        video.srcObject = stream;
-      } catch (error) {
-        video.src = window.URL.createObjectURL(stream);
-      }
-      video.play();
-
-      requestAnimationFrame(step);
-
-      return stream; // so chained promises can benefit
-    })
-    .catch((error) => {
-      console.error("An error occurred: ", error);
-    });
-}
-
-function clearphoto() {
+  };
+  const canvas = document.querySelector("#canvas");
   const context = canvas.getContext("2d");
-  // context.fillStyle = "#AAA";
-  // context.fillRect(0, 0, canvas.width, canvas.height);
-	context.clearRect(0, 0, canvas.width, canvas.height);
+  const photo = document.querySelector("#photo");
+  const startButton = document.querySelector("button.foo-button");
+  const cameraButton = document.querySelector(".camera-button");
+  const cameraOptions = document.querySelector(".custom-select");
+  const input = document.querySelector('input[type="range"]');
 
-  const ctx = document.querySelector('#canvasOutput').getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // let streaming = false;
+  // let streamOn = null;
+  let animeReq = null;
+  let stream;
+  let imageCapture;
+  let vc = null;
 
-  const data = canvas.toDataURL("image/webp");
-  photo.setAttribute("src", data);
-}
-
-function dataURLtoBlob (dataURL) {
-  let binary = atob(dataURL.split(',')[1]);
-  let array = [];
-  let i = 0;
-  while (i < binary.length){
-    array.push(binary.charCodeAt(i));
-    i++;
+  async function getDevices() {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices;
   }
-  return new Blob([ new Uint8Array(array) ], {type: 'image/webp'});
-}
 
-function takepicture() {
-  const context = canvas.getContext("2d");
-  if (video.videoWidth && video.videoHeight) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const data = canvas.toDataURL("image/webp");
-    photo.setAttribute("src", data);
-
-    const file  = dataURLtoBlob(data);
-    handleFiles(file);
-    // Cov && Cov();
-  } else {
-    clearphoto();
-  }
-}
-
-
-function handleFiles(file) {
-    const uri = 'https://s1ar.cc/lookup';
-    const xhr = new XMLHttpRequest();
-    const fd = new FormData();
-
-    xhr.open('POST', uri, true);
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            // console.log(xhr.responseText);
-            const result = JSON.parse(xhr.responseText);
-            let { distances } = result,
-                str = '';
-            if (distances && distances.length > 0) {
-                distances.forEach((item, i) => {
-                    if (i > 2) {
-                        return;
-                    }
-                    alert(JSON.stringify(item));
-                });
-            } else {
-                show(snackbar, '没有找到图片中的颜哦😯');
-            }
-        } else if (xhr.readyState === 4 && xhr.status !== 0) {
-            show(snackbar, '没有找到图片中的颜哦😯');
-        } else {
-          show(snackbar, '出错惹');
+  function startCamera(constraints) {
+    return navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then((rawStream) => {
+        // video.src = URL.createObjectURL(stream);
+        try {
+          video.src = window.URL.createObjectURL(rawStream);
+        } catch (error) {
+          video.srcObject = rawStream;
         }
-    };
-    fd.append('image', file);
-    xhr.send(fd);
-}
+        video.play();
+        document.querySelector('#demo-absolute-fab').disabled = false;
 
-function show(sb, messageInput) {
+        return rawStream; // so chained promises can benefit
+      })
+      .catch((error) => {
+        console.error("An error occurred: ", error);
+        alert(error);
+      });
+  }
+
+  function clearphoto() {
+    const context = canvas.getContext("2d");
+    const ctx = document.querySelector("#canvasOutput").getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    photo.removeAttribute("src");
+  }
+
+  function dataURLtoBlob(dataURL) {
+    let binary = atob(dataURL.split(",")[1]);
+    let array = [];
+    let i = 0;
+    while (i < binary.length) {
+      array.push(binary.charCodeAt(i));
+      i++;
+    }
+    return new Blob([new Uint8Array(array)], { type: "image/webp" });
+  }
+
+  function show(sb, messageInput) {
     // const data = {
     //     message: messageInput,
     //     timeout: 2750,
@@ -156,105 +115,324 @@ function show(sb, messageInput) {
     //         // console.log(data);
     //     }
     // };
-    document.querySelector('.mdc-snackbar__label').textContent = messageInput;
+    (
+      document.querySelector(".mdc-snackbar__label") || {}
+    ).textContent = messageInput;
     sb.open();
-}
-
-////////////////////////////////////////////////////////////////
-
-
-
-const getCameraSelection = async () => {
-  const devices = await getDevices();
-  const videoDevices = devices.filter((device) => device.kind === "videoinput");
-  const options = videoDevices.map((videoDevice) => {
-    if(videoDevice.label === '') return '';
-    return `<option value="${videoDevice.deviceId}">${videoDevice.label}</option>`;
-  });
-  return options;
-};
-
-const getCameraList = () => {
-  getCameraSelection()
-    .then((data) => {
-      if(data.join('')==='') {
-        cameraOptions.style.display = 'none';
-      }else{
-        cameraOptions.innerHTML = data.join("");
-      }
-    })
-    .catch((error) => console.error(error));
-};
-
-const pauseStream = () => {
-  video.pause();
-  streamOn.getTracks().forEach((track) => {
-    track.stop();
-  });
-	clearphoto();
-  animeReq && window.cancelAnimationFrame(animeReq);
-	video.srcObject = null;
-  streamOn = null;
-};
-
-
-
-
-////////////////////////////////////////////////////////////////
-
-
-video.addEventListener(
-  "canplay",
-  function (ev) {
-    if (!streaming) {
-      canvas.setAttribute("width", video.videoWidth);
-      canvas.setAttribute("height", video.videoHeight);
-      streaming = true;
-    }
-  },
-  false
-);
-
-button.onclick = function () {
-  const button = this;
-  if (streamOn !== null) {
-    // streamOn.stop();
-    // URL.revokeObjectURL(video.src); // cleanin up
-    pauseStream();
-    button.textContent = "Start camera";
-  } else {
-    button.textContent = "Starting camera";
-    startCamera(constraints).then((stream) => {
-      streamOn = stream;
-      button.textContent = "Stop camera";
-    });
   }
-};
 
-cameraButton.addEventListener(
-  "click",
-  function (ev) {
-    clearphoto();
-    takepicture();
-    ev.preventDefault();
-  },
-  false
-);
+  ////////////////////////////////////////////////////////////////
 
-cameraOptions.onchange = () => {
-  const updatedConstraints = {
-    ...constraints,
-    deviceId: {
-      exact: cameraOptions.value,
-    },
+  const getCameraSelection = async () => {
+    const devices = await getDevices();
+    const videoDevices = devices.filter(
+      (device) => device.kind === "videoinput"
+    );
+    const options = videoDevices.map((videoDevice) => {
+      if (videoDevice.label === "") return "";
+      return `<option value="${videoDevice.deviceId}">${videoDevice.label}</option>`;
+    });
+    options.unshift(`<option value="user">Front Camera</option>`);
+    options.unshift(`<option value="environment">Rear Camera</option>`);
+    return options;
   };
 
-  startCamera(updatedConstraints);
+  const getCameraList = (cameraOptions) => {
+    getCameraSelection()
+      .then((data) => {
+        if (!cameraOptions) {
+          return;
+        }
+        if (data.join("") === "") {
+          cameraOptions.style.display = "none";
+        } else {
+          cameraOptions.innerHTML = data.join("");
+        }
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const pauseStream = () => {
+    video.pause();
+    document.querySelector('#demo-absolute-fab').disabled = false;
+    if (stream) {
+      const tracks = stream.getTracks();
+      tracks.forEach((track) => track.stop());
+    }
+    clearphoto();
+    animeReq && window.cancelAnimationFrame(animeReq);
+    video.srcObject = null;
+    video.src = null;
+    stream = null;
+    canvas.removeAttribute('width');
+    canvas.removeAttribute('height');
+    document.querySelector("#canvasOutput").removeAttribute("width");
+    document.querySelector("#canvasOutput").removeAttribute("height");
+  };
+
+  const capture = async (facingMode) => {
+    let updatedConstraints;
+    switch (facingMode) {
+      case "user":
+      case "environment":
+        updatedConstraints = {
+          ...constraints,
+          video: {
+            ...constraints.video,
+            facingMode: {
+              ...constraints.video.facingMode,
+              ideal: facingMode,
+            },
+          },
+        };
+        break;
+      default:
+        updatedConstraints = {
+          ...constraints,
+          video: {
+            ...constraints.video,
+            deviceId: {
+              ...constraints.video.deviceId,
+              ideal: facingMode,
+            },
+          },
+        };
+        break;
+    }
+    // constraints.video.facingMode.ideal = facingMode;
+    pauseStream();
+    startCamera(updatedConstraints)
+      .then((rawStream) => {
+        stream = rawStream;
+        startButton.querySelector(".material-icons").textContent =
+          "videocam_off";
+
+        animeReq = window.requestAnimationFrame(step);
+
+        const track = rawStream.getVideoTracks()[0];
+        imageCapture = new ImageCapture(track);
+
+        return imageCapture.getPhotoCapabilities();
+      })
+      .then((photoCapabilities) => {
+        // const settings = imageCapture.track.getSettings();
+
+        input.min = photoCapabilities.imageWidth.min;
+        input.max = photoCapabilities.imageWidth.max;
+        input.step = photoCapabilities.imageWidth.step;
+
+        return imageCapture.getPhotoSettings();
+      })
+      .then((photoSettings) => {
+        input.value = photoSettings.imageWidth;
+      })
+      .catch((error) => console.error("Argh!", error.name || error));
+  };
+
+
+  ////////////////////////////////////////////////////////////////
+
+
+  video.addEventListener(
+    "canplay",
+    function(ev) {
+      canvas.setAttribute("width", video.videoWidth);
+      canvas.setAttribute("height", video.videoHeight);
+      document.querySelector('#canvasOutput').setAttribute("width", video.videoWidth);
+      document.querySelector('#canvasOutput').setAttribute("height", video.videoHeight);
+      try{
+        vc = new cv.VideoCapture(video);
+      }catch(e){
+        console.error(e);
+      }
+    },
+    false
+  );
+
+  startButton.addEventListener("click", () => {
+    if (stream) {
+      // stream.stop();
+      // URL.revokeObjectURL(video.src); // cleanin up
+      pauseStream();
+      startButton.querySelector('.material-icons').textContent = "videocam";
+    } else {
+      startButton.querySelector('.material-icons').textContent = "...";
+      capture("environment");
+    }
+  });
+
+  cameraButton.addEventListener("click", onTakePhotoButtonClick, false);
+
+  // btnBack.addEventListener("click", () => {
+  //   capture("environment");
+  // });
+
+  // btnFront.addEventListener("click", () => {
+  //   capture("user");
+  // });
+
+  cameraOptions.addEventListener("change", () => {
+    capture(cameraOptions.value);
+    // const updatedConstraints = {
+    //   ...constraints,
+    //   video: {
+    //     deviceId: {
+    //       exact: cameraOptions.value,
+    //     },
+    //   },
+    // };
+
+    // if(streamOn){
+    //   const frIdeal = 35;
+    //   let track = streamOn.getVideoTracks()[0]; // getTracks
+    //   let constrs = track.getConstraints();
+    //   let frCap = track.getCapabilities().frameRate;
+    //   if (frCap && "min" in frCap && "max" in frCap) {
+    //     constrs.frameRate = Math.max(frCap.min, Math.min(frCap.max, frIdeal));
+    //     constrs.deviceId = constrs.deviceId || {};
+    //     constrs.deviceId.exact = cameraOptions.value;
+    //     track.applyConstraints(constrs);
+    //   }
+    // }
+
+    // startCamera(updatedConstraints);
+  });
+
+  input.oninput = async (event) => {
+    if(stream) {      
+      try {
+        const constraints = { advanced: [{ 'zoom': input.value }] };
+        const [track] = stream.getVideoTracks();
+        await track.applyConstraints(constraints);
+      } catch (err) {
+        console.error("applyConstraints() failed: ", err);
+      }
+    }
+  };
+
+
+  ////////////////////////////////////////////////////////////////
+
+
+
+  getCameraList(cameraOptions);
+
+
+
+
+  ////////////////////////////////////////////////////////////////
+
+  function step(timestamp) {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    // document.querySelector('#canvasOutput').getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    Cov && Cov();
+    animeReq = window.requestAnimationFrame(step);
+
+    // onTakePhotoButtonClick().then((data) => {
+    //   window.requestAnimationFrame(step);
+    //   Cov && Cov();
+    // });
+
+  }
+
+  function takepicture() {
+    const context = canvas.getContext("2d");
+    if (video.videoWidth && video.videoHeight) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const data = canvas.toDataURL("image/webp");
+      photo.setAttribute("src", data);
+
+      const file = dataURLtoBlob(data);
+      handleFiles(file);
+    } else {
+      clearphoto();
+    }
+  }
+
+  function handleFiles(file) {
+    const uri = "https://s1ar.cc/lookup";
+    const xhr = new XMLHttpRequest();
+    const fd = new FormData();
+
+    xhr.open("POST", uri, true);
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        // console.log(xhr.responseText);
+        const result = JSON.parse(xhr.responseText);
+        let { distances } = result,
+          str = "";
+        if (distances && distances.length > 0) {
+          distances.forEach((item, i) => {
+            if (i > 2) {
+              return;
+            }
+            alert(JSON.stringify(item));
+          });
+        } else {
+          show(snackbar, "没有找到图片中的颜哦😯");
+        }
+      } else if (xhr.readyState === 4 && xhr.status !== 0) {
+        show(snackbar, "没有找到图片中的颜哦😯");
+      } else {
+        show(snackbar, "出错惹");
+      }
+    };
+    fd.append("image", file);
+    xhr.send(fd);
+  }
+
+  function onTakePhotoButtonClick() {
+    if (video.videoWidth && video.videoHeight && imageCapture) {
+      return imageCapture
+        .takePhoto({ imageWidth: input.max })
+        .then((blob) => createImageBitmap(blob))
+        .then((imageBitmap) => {
+          let c = document.querySelector('#canvasOutput');
+          drawCanvas(imageBitmap, c);
+          console.log(
+            `Photo size is ${imageBitmap.width}x${imageBitmap.height}`
+          );
+          return imageBitmap;
+        })
+        // .then(() => {
+        //   const data = canvas.toDataURL("image/webp");
+        //   const file = dataURLtoBlob(data);
+        //   handleFiles(file);
+        // })
+        .catch((error) => console.error(error));
+    } else {
+      return Promise.resolve();
+    }
+  }
+
+  function drawCanvas(img, c) {
+    // let c = document.querySelector('#canvasOutput');
+    let ctx = c.getContext('2d');
+    c.width = getComputedStyle(c).width.split("px")[0];
+    c.height = getComputedStyle(c).height.split("px")[0];
+    let ratio = Math.min(c.width / img.width, c.height / img.height);
+    let x = (c.width - img.width * ratio) / 2;
+    let y = (c.height - img.height * ratio) / 2;
+    ctx.clearRect(0, 0, c.width, c.height);
+    // ctx.drawImage(img, 0, 0, c.width, c.height);
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      img.width,
+      img.height,
+      x,
+      y,
+      img.width * ratio,
+      img.height * ratio
+    );
+  }
+
 };
 
 
-////////////////////////////////////////////////////////////////
-
-
-
-getCameraList();
+startApp();
