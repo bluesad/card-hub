@@ -79,9 +79,10 @@ function findContours({ msg, payload }) {
     cnt.delete();
     tmp.delete();
   }
+  let vertices;
   if (maxContourIndex >= 0) {
     let rotatedRect = cv.minAreaRect(contours.get(maxContourIndex));
-    let vertices = cv.RotatedRect.points(rotatedRect);
+    vertices = cv.RotatedRect.points(rotatedRect);
     let contoursColor = new cv.Scalar(255, 255, 255, 100);
     let rectangleColor = new cv.Scalar(255, 0, 0, 222);
     cv.drawContours(
@@ -133,7 +134,7 @@ function findContours({ msg, payload }) {
     // cv.imshow("canvasOutput", src);
   }
 
-  postMessage({ msg, payload: imageDataFromMat(src) });
+  postMessage({ msg, payload: imageDataFromMat(src),  vertices});
   src.delete();
   gray_src.delete();
   raw_edge.delete();

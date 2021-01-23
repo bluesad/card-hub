@@ -15,7 +15,17 @@ class CV {
     return new Promise((res, rej) => {
       let interval = setInterval(() => {
         const status = this._status[msg];
-        if (status && status[0] === "done") res(status[1]);
+        if (status && status[0] === "done") {
+          if(msg === 'findContours' && !window.playSound && status[1].data.vertices) {
+            window.playSound = setTimeout(() =>{
+              let audio = new Audio('../camera.mp3');
+              audio.play();
+              clearTimeout(window.playSound);
+              window.playSound = null;
+            }, 10);
+          }
+          res(status[1]);
+        }
         if (status && status[0] === "error") rej(status[1]);
         if (status && status[0] !== "loading") {
           delete this._status[msg];

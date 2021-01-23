@@ -91,3 +91,10 @@ video{
   bottom: 100px;
   right: 30px;
 }
+
+.demo-card__secondary{
+  max-height: 10rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+}

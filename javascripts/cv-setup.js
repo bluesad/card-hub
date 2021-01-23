@@ -185,8 +185,8 @@ async function processVideo() {
   vc.read(src);
   let result, image;
 
-  context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-  image = context.getImageData(0, 0, video.videoWidth, video.videoHeight);
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  image = context.getImageData(0, 0, canvas.width, canvas.height);
 
   switch (filter) {
     case "gray":
@@ -224,7 +224,24 @@ async function processVideo() {
       animeReq = requestAnimationFrame(processVideo);
       return;
   }
-  ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
+  if(result.data.vertices && result.data.vertices.length>0 && filter === 'findContours'){
+    // ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
+    let xs = result.data.vertices.map(i=>i.x).sort();
+    let ys = result.data.vertices.map(i=>i.y).sort();
+    ctx.clearRect(0, 0, canvasOutput.width, canvasOutput.height);
+    ctx.putImageData(result.data.payload, -xs[0], -ys[0],
+      // 0, 0, 
+      // xs[3]-xs[0],
+      // ys[3]-ys[0]
+    );
+    // ctx.putImageData(imgData,dx, dy, dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+    // ctx.drawImage(imgData,sx,sy,swidth,sheight,x,y,width,height);
+    let d = document.createElement('div');
+    d.innerText = JSON.stringify(result.data.vertices);
+    document.querySelector('.demo-card__secondary').appendChild(d);
+  } else if (filter !== 'findContours') {
+    ctx.putImageData(result.data.payload, 0, 0, 0, 0, canvasOutput.width, canvasOutput.height);
+  }
   animeReq = requestAnimationFrame(processVideo);
 }
 
